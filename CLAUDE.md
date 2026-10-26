@@ -28,6 +28,9 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest                                       # unit tests, no data needed
 python -m f1model.eda --data-dir data/raw    # phase 1 summary (needs data)
+python -m f1model.evaluate --data-dir data/raw  # walk-forward backtest + reliability table
+python -m f1model.evaluate --data-dir data/raw --holdout  # + 2023-2024 holdout (already run once)
+python -m f1model.explain --data-dir data/raw   # SHAP values + README figures
 ```
 
 Data: CSVs go in `data/raw/` (gitignored, never commit them). Download with
@@ -43,21 +46,39 @@ and copy the `*.csv` files over. Missing values in the CSVs are the literal `\N`
   `dataset.OUTCOMES` are labels or inputs to lagged features only.
 - `driver_standings` / `constructor_standings` are after the race: always join
   the previous round's standings.
+- **Sprints are excluded.** `sprint_results` is not loaded and season points use
+  race points only, so 2021+ ranks differ slightly from official standings.
 - Rolling features: `groupby(entity).shift(1)` before any rolling or expanding
   window. Never use full-season aggregates.
 - **Validation:** expanding-window walk-forward by season (test 2016 to 2022),
   tuning on an inner walk-forward inside each training window. Never random
   K-fold. 2023 and 2024 are a holdout, run once at the end.
 - Fit encoders, imputers and calibrators inside each training window only.
+- **XGBoost stays on `XGB_DEFAULTS`.** The last training season picks the
+  number of rounds by early stopping. A 20-draw random search on that season
+  lowered out-of-sample Brier skill (6.2% to 4.9%), so tuning is off by default.
+- **No calibrator.** Raw XGBoost probabilities are calibrated (mean predicted
+  = observed podium rate); Platt and isotonic fitted on the inner season did
+  not help. Reliability table is in the README.
+- **The holdout has been run.** 2023-2024 results are in the README. Do not
+  change the model and re-score the holdout; that would make it a test set.
+- **One README.** `README.md` is the single write-up and must explain every
+  design choice and carry every reported number. No other READMEs.
 - Benchmark: `GridBaseline` (podium rate by grid slot). Report log loss,
-  Brier skill vs the baseline, ROC/PR-AUC and calibration per season.
+  Brier skill vs the baseline, ROC/PR-AUC and calibration per season. Numbers
+  in the README come from `python -m f1model.evaluate`; rerun it after any
+  change and update the README tables.
 - Every new feature needs a leakage test: its value for race *t* must not
   change when race *t*'s results are removed.
 
 ## Code layout
 
 `src/f1model/`: `load.py` (CSV reading), `dataset.py` (base table),
-`baseline.py` (grid benchmark), `eda.py` (phase 1 script). Planned:
-`features.py`, `splits.py`, `train.py`, `evaluate.py`, `explain.py`.
+`features.py` (point-in-time features), `baseline.py` (grid benchmark),
+`splits.py` (walk-forward folds), `train.py` (models with a shared
+`fit(df)` / `predict_proba(df)` interface), `evaluate.py` (metrics, backtest
+script), `explain.py` (out-of-sample SHAP and all figures), `eda.py` (phase 1
+script). All six phases are done; figures live in `reports/figures/` and are
+committed.
 Tests use the small synthetic fixture in `tests/conftest.py`; keep CI
 independent of the real data.
