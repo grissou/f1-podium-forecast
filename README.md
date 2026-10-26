@@ -348,8 +348,18 @@ linear model on the same inputs shows how much of XGBoost's gain comes from
 the features and how much from non-linearity. Answer: most of it is the
 features (+4.2% of the +6.2%).
 
-**XGBoost** (`train.py`). Gradient-boosted trees with fixed, conservative
-settings chosen for a few thousand rows and a probability target:
+**XGBoost** (`train.py`). What it is, in plain terms: a decision tree asks a
+chain of yes/no questions about the features ("grid slot below 4? team points
+above 10?") and gives a score at the end of each chain. One tree is a crude
+model. Gradient boosting builds hundreds of small trees one after another,
+each one fitted to the mistakes the previous trees are still making, and adds
+them up. The result is a flexible model that captures interactions (a good
+driver in a bad car, a strong car starting from the back) that a linear model
+cannot, while staying explainable because every prediction is a sum of tree
+scores, which is what SHAP takes apart. XGBoost is a fast, well-tested
+implementation that also handles missing values natively. The settings below
+are deliberately conservative for a few thousand rows and a probability
+target:
 
 | Setting | Value | Why |
 |---|---|---|
