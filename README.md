@@ -60,9 +60,8 @@ If you have no background in modelling, these are the only terms you need:
 10. [Models](#10-models)
 11. [Calibration](#11-calibration)
 12. [Honest reading of the result](#12-honest-reading-of-the-result)
-13. [On a CV, and in an interview](#13-on-a-cv-and-in-an-interview)
-14. [Reproduce it](#14-reproduce-it)
-15. [Repository layout](#15-repository-layout)
+13. [Reproduce it](#13-reproduce-it)
+14. [Repository layout](#14-repository-layout)
 
 ---
 
@@ -221,7 +220,7 @@ Source: the Kaggle dataset
 [rohanrao/formula-1-world-championship-1950-2020](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020),
 14 relational CSV files covering every championship race since 1950 (despite
 the name it runs to the end of 2024). The CSVs are not committed: the whole
-`data/` folder is git-ignored. Section 14
+`data/` folder is git-ignored. Section 13
 shows how to download them. Missing values are written as the literal `\N`.
 
 | Table | One row per | Used for |
@@ -481,7 +480,7 @@ clears zero, and vanished in 2024, where the grid was better in three races
 out of four. Pooled over both holdout years the gain is positive but not
 distinguishable from zero with only 46 races.
 
-Nine out-of-sample seasons, one lost. That is what a real but small edge
+Nine out-of-sample seasons: seven won clearly, 2019 a coin flip, 2024 lost. That is what a real but small edge
 looks like: a single season where the grid is unusually informative (2024's
 grid log loss was among the lowest of any year, as in 2019, the other year
 the model barely won) is enough to erase it.
@@ -514,49 +513,17 @@ description of what the model does than "beats the grid".
   `pit_stops` (how fast the car actually was last race, not just where it
   finished), weather, and regulation-era indicators are the obvious next
   features. Each would go through the same leakage test.
+- **Each race's probabilities are not forced to sum to three.** Every driver
+  is scored on their own, so the forecasts in one race add up to anywhere
+  between about 2.1 and 3.9 (3.01 on average). Rescaling each race to sum to
+  exactly three changes the pooled log loss by less than 0.001, so it is left
+  out; a conditional-logit or Plackett-Luce model would build the constraint
+  in.
 - **No betting claims.** The dataset has no odds, so nothing here says the
   model would make money. The claims are about forecast skill against the
   grid.
 
-## 13. On a CV, and in an interview
-
-Suggested bullet:
-
-> **F1 podium probability model (Python, XGBoost, SHAP).** Built a
-> point-in-time feature pipeline and a season-by-season walk-forward backtest
-> with no look-ahead bias on 15 seasons of race data; XGBoost beat a
-> starting-grid benchmark by 6.2% Brier skill (log loss 0.231 to 0.203) over
-> seven walk-forward test seasons, with calibrated probabilities and SHAP
-> attribution of what drives each forecast; reported an untouched 2023-24
-> holdout as it came out.
-
-Questions this project is ready for:
-
-- *Why not cross-validation?* Because the features are lagged aggregates. A
-  shuffled fold trains on the future. Walk-forward by season is the only
-  honest split, and the leakage test proves the features obey it.
-- *What is the benchmark and why?* The grid, because it is the market price:
-  it already impounds qualifying pace. A model only matters if it adds
-  information beyond it, and Brier skill measures exactly that.
-- *Why did you reject tuning?* It won on the inner validation season by a
-  hair and lost out of sample. With 400 rows per season the search fits
-  noise. Fixed, conservative defaults were the more defensible choice.
-- *The holdout was flat on Brier skill. Why not fix it?* Because the holdout
-  is spent. Changing the model after seeing it would make it a validation
-  set and the reported number would no longer mean anything.
-- *Did the edge persist out of sample?* In eight of nine out-of-sample
-  seasons. The bootstrap interval is clear of zero over the seven
-  walk-forward seasons and over 2023, and includes zero over 2024 and over
-  the pooled holdout. A small edge that one quiet season can erase, reported
-  with its error bars.
-- *What does the model know that the grid does not?* How far off the pole
-  lap a car qualified, and how strong the team has been lately. SHAP shows
-  those two carry as much weight as the grid slot itself.
-- *Is a 19% forecast useful if the driver then finishes third?* Yes, if 19%
-  forecasts come true about 19% of the time, which the reliability diagram
-  shows they do. Calibration is what makes a probability usable for sizing.
-
-## 14. Reproduce it
+## 13. Reproduce it
 
 Requirements: Python 3.12 or newer. Library versions are pinned so the numbers reproduce.
 
@@ -588,7 +555,7 @@ python -m f1model.explain --data-dir data/raw             # SHAP values and thre
 Every number and figure in this README comes from those commands. Tables land
 in `reports/` as CSV and figures in `reports/figures/`.
 
-## 15. Repository layout
+## 14. Repository layout
 
 ```
 src/f1model/
