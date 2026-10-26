@@ -7,6 +7,20 @@ squeezing out accuracy.
 
 Plan: https://claude.ai/artifact/NXjraZiC8UwTbjfVhBEVgi
 
+## Priority 1: clarity, small size, explainability
+
+These beat accuracy and features whenever they conflict.
+
+- **Clarity:** code a reader can follow top to bottom. Plain pandas, short
+  functions, descriptive names, a one-line docstring saying *why*.
+- **Minimal size:** fewest files, lines and dependencies that do the job. No
+  speculative abstractions, config systems or helpers used once. Delete before
+  adding. Prefer a few strong features over many weak ones.
+- **Explainability:** every feature has a plain-English meaning and a finance
+  analogue; every modelling choice is justified in one sentence; SHAP output
+  must be readable by a non-specialist. If a gain in score cannot be
+  explained, it does not go in.
+
 ## Commands
 
 ```bash
