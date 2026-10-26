@@ -31,6 +31,13 @@ def test_missing_qualifying_is_left_null(tables):
     df = build_base_table(tables).set_index(["raceId", "driverId"])
     assert df["quali_position"].isna().sum() == 1
     assert pd.isna(df.loc[(3, 104), "quali_position"])
+    assert pd.isna(df.loc[(3, 104), "quali_best_s"])
+
+
+def test_best_qualifying_lap_in_seconds(tables):
+    df = build_base_table(tables).set_index(["raceId", "driverId"])
+    assert df.loc[(2, 101), "quali_best_s"] == 89.0   # Q3 lap 1:29.000
+    assert df.loc[(2, 104), "quali_best_s"] == 91.5   # only a Q1 lap
 
 
 def test_rows_are_in_time_order(tables):
