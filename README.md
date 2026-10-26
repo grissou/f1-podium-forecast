@@ -28,7 +28,7 @@ of sample, so the model ships with fixed defaults.
 | Features | 14, all computable before the race |
 | Validation | expanding-window walk-forward, test 2016 to 2022; holdout 2023 to 2024 |
 | Best model | XGBoost, depth 3, fixed defaults, early-stopped on the last training season |
-| Code | 7 modules, under 650 lines, 20 unit tests, CI |
+| Code | 8 modules, under 650 lines, 20 unit tests, CI |
 
 If you have no background in modelling, these are the only terms you need:
 
@@ -284,13 +284,16 @@ before it is computed, the way a momentum factor is built.
 | Championship state | `driver_season_points` | Points scored earlier this season | Relative strength |
 | | `driver_season_rank` | Rank of that total among drivers in this race | |
 | | `team_season_points` | Team's points earlier this season | |
-| Track history | `driver_circuit_mean_finish` | Driver's average finish in previous visits to this circuit (missing on a first visit) | Seasonality |
+| Track history | `driver_circuit_mean_finish` | Driver's average finish in previous visits to this circuit since 2010 (missing on a first visit) | Seasonality |
 
 Why these and not more: the plan allowed 25 to 40 features, but a few strong,
 explainable ones were preferred. Every feature has a one-sentence meaning a
 non-specialist can follow. Missing values (a driver's first race, a first
 visit to a circuit) are left missing; XGBoost handles them natively and the
 logistic model imputes the median within its training window.
+History starts in 2010, so form windows are empty at the first 2010 race and
+fill up over the next few, and no 2010 row has circuit history. This thins
+out the earliest training rows only; every test season has full history.
 
 ## 8. Leakage, and the test that guards against it
 
