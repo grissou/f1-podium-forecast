@@ -59,6 +59,27 @@ def top3_hit_rate(df: pd.DataFrame, p: np.ndarray) -> float:
     return float(picks["podium"].mean())
 
 
+def log_loss_gain(df: pd.DataFrame, p_model, p_grid, n_boot: int = 5000, seed: int = 0) -> dict:
+    """Is the edge real? Per-race log-loss gain of the model over the grid, with a bootstrap CI.
+
+    Races are the unit of resampling because drivers in one race are not
+    independent (exactly three of them finish on the podium).
+    """
+    y = df["podium"].to_numpy()
+    row_gain = _row_log_loss(y, np.asarray(p_grid)) - _row_log_loss(y, np.asarray(p_model))
+    race_gain = pd.Series(row_gain, index=df.index).groupby(df["raceId"]).mean().to_numpy()
+    rng = np.random.default_rng(seed)
+    boots = np.array([rng.choice(race_gain, len(race_gain)).mean() for _ in range(n_boot)])
+    low, high = np.percentile(boots, [2.5, 97.5])
+    return {"gain": race_gain.mean(), "ci_low": low, "ci_high": high,
+            "share_better": (race_gain > 0).mean(), "races": len(race_gain)}
+
+
+def _row_log_loss(y, p, eps: float = 1e-6) -> np.ndarray:
+    p = np.clip(p, eps, 1 - eps)
+    return -(y * np.log(p) + (1 - y) * np.log(1 - p))
+
+
 def walk_forward_predictions(make_model, df: pd.DataFrame, test_seasons=TEST_SEASONS) -> pd.Series:
     """Out-of-sample P(podium) for every row in the test seasons, from a fresh fit per season."""
     p = pd.Series(np.nan, index=df.index)
@@ -128,11 +149,25 @@ def main() -> None:
     print("\nReliability of XGBoost, pooled over test seasons:")
     print(table.round(3).to_string())
 
+    scored = df.loc[p.index]
+    gains = {"walk-forward": log_loss_gain(scored, p, walk_forward_predictions(GridBaseline, df))}
+
     if args.holdout:
         held = holdout(MODELS, df)
         held.to_csv(out / "holdout.csv")
         print(f"\nHoldout {HOLDOUT_SEASONS[0]}-{HOLDOUT_SEASONS[-1]}, trained on everything before:")
         print(held.round(3).to_string())
+
+        train = df[df["year"] < min(HOLDOUT_SEASONS)]
+        model, grid = xgboost().fit(train), GridBaseline().fit(train)
+        for label, test in [*((str(y), df[df["year"] == y]) for y in HOLDOUT_SEASONS),
+                            ("holdout pooled", df[df["year"].isin(HOLDOUT_SEASONS)])]:
+            gains[label] = log_loss_gain(test, model.predict_proba(test), grid.predict_proba(test))
+
+    gains = pd.DataFrame(gains).T
+    gains.to_csv(out / "log_loss_gain.csv")
+    print("\nXGBoost log-loss gain over the grid per race, 95% bootstrap CI over races:")
+    print(gains.round(4).to_string())
 
 
 if __name__ == "__main__":

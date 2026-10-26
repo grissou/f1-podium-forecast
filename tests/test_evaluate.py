@@ -3,7 +3,7 @@ import pandas as pd
 
 from f1model.baseline import GridBaseline
 from f1model.evaluate import (METRICS, compare, expected_calibration_error, holdout,
-                              reliability_table, top3_hit_rate)
+                              log_loss_gain, reliability_table, top3_hit_rate)
 from f1model.features import build_features
 from f1model.train import logistic_regression
 
@@ -34,6 +34,17 @@ def test_holdout_fits_once_before_the_holdout_seasons(synthetic_base):
     results = holdout({"grid": GridBaseline}, df, seasons=(2012,))
     assert list(results.index) == [("grid", "2012"), ("grid", "all")]
     assert results[METRICS].notna().all().all()
+
+
+def test_log_loss_gain_is_positive_when_model_is_sharper():
+    df = pd.DataFrame({"raceId": [1, 1, 2, 2, 3, 3], "podium": [1, 0, 1, 0, 1, 0]})
+    grid = np.full(6, 0.5)
+    model = np.array([0.8, 0.2] * 3)   # right direction in every race
+    gain = log_loss_gain(df, model, grid, n_boot=200)
+    assert gain["gain"] > 0
+    assert gain["ci_low"] > 0
+    assert gain["share_better"] == 1 and gain["races"] == 3
+    assert log_loss_gain(df, grid, grid, n_boot=10)["gain"] == 0
 
 
 def test_reliability_table_bins_predictions():

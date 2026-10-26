@@ -439,18 +439,55 @@ calibration-error gap to the grid (0.031 vs 0.025) is within what ten bins of
 
 ## 12. Honest reading of the result
 
-- **The signal is real but modest.** Beating the grid in seven of seven
-  development seasons, with a log-loss gain of about 0.03, is a consistent
-  edge, not a large one. The grid is set by a qualifying session held the day
-  before on the same track in the same car, which is about the best possible
-  predictor of race pace.
+### Is the edge real?
+
+The first question a quantitative reader asks. The table puts error bars on
+it: the model's log-loss gain over the grid, averaged per race, with a 95%
+confidence interval from resampling races (races, not drivers, because the
+drivers in one race are not independent: exactly three of them podium).
+
+| Period | Gain per race | 95% CI | Races where the model was better |
+|---|---|---|---|
+| Walk-forward 2016 to 2022 | +0.028 | +0.019 to +0.038 | 72% of 144 |
+| Holdout 2023 | +0.031 | +0.002 to +0.060 | 64% of 22 |
+| Holdout 2024 | -0.007 | -0.022 to +0.011 | 25% of 24 |
+| Holdout pooled | +0.011 | -0.006 to +0.029 | 43% of 46 |
+
+Two layers of out-of-sample are in play. The seven walk-forward seasons are
+already out of sample: each was scored by a model that never saw it. There
+the edge is robust: the interval is well clear of zero, the model wins in
+nearly three races out of four, and all seven seasons are positive. The
+holdout is a stricter second layer, two seasons that also never influenced
+any design decision. There the edge held in 2023, with an interval that just
+clears zero, and vanished in 2024, where the grid was better in three races
+out of four. Pooled over both holdout years the gain is positive but not
+distinguishable from zero with only 46 races.
+
+Nine out-of-sample seasons, one lost. That is what a real but small edge
+looks like: a single season where the grid is unusually informative (2024's
+grid log loss was among the lowest of any year, as in 2019, the other year
+the model barely won) is enough to erase it.
+
+The race-level numbers also show *how* the model wins. In the holdout it was
+better in fewer than half the races yet had a positive mean gain. Its wins
+are large and rare: the races where a strong car started far back and the
+model priced a podium the grid gave almost no chance. Its losses are small
+and frequent: the premium it pays every race for keeping that possibility
+open. That is a long-volatility payoff profile, and it is a more accurate
+description of what the model does than "beats the grid".
+
+### The rest
+
+- **The signal is real but modest.** The grid is set by a qualifying session
+  held the day before on the same track in the same car, which is about the
+  best possible predictor of race pace. A consistent gain of 0.03 in log loss
+  against it is an edge, not a large one.
 - **The holdout is mixed, and is reported as such.** 2023 agreed with the
   backtest (+7.5% Brier skill). 2024 did not (-7.2%), and no model beat the
   grid that year. Pooled, the model still ranks drivers better (ROC-AUC 0.928
-  vs 0.909) with lower log loss, but Brier skill is flat. One season is about
-  480 rows with 72 podiums. The right reaction is to report it, not to tune
-  until it looks better, which would turn the holdout into another training
-  set.
+  vs 0.909) with lower log loss, but Brier skill is flat. The right reaction
+  is to report it, not to tune until it looks better, which would turn the
+  holdout into another training set.
 - **The tuned model did better on the holdout than the defaults.** It was
   also worse on the seven development seasons. Preferring whichever variant
   won on the holdout is exactly the selection bias the holdout exists to
@@ -489,6 +526,11 @@ Questions this project is ready for:
 - *The holdout was flat on Brier skill. Why not fix it?* Because the holdout
   is spent. Changing the model after seeing it would make it a validation
   set and the reported number would no longer mean anything.
+- *Did the edge persist out of sample?* In eight of nine out-of-sample
+  seasons. The bootstrap interval is clear of zero over the seven
+  walk-forward seasons and over 2023, and includes zero over 2024 and over
+  the pooled holdout. A small edge that one quiet season can erase, reported
+  with its error bars.
 - *What does the model know that the grid does not?* How far off the pole
   lap a car qualified, and how strong the team has been lately. SHAP shows
   those two carry as much weight as the grid slot itself.
@@ -503,7 +545,7 @@ Requirements: Python 3.11 or newer.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                          # 20 unit tests, no data needed, a few seconds
+pytest                          # 21 unit tests, no data needed, a few seconds
 ```
 
 Download the data (public dataset; no Kaggle account needed):
@@ -521,7 +563,7 @@ for f in src.rglob('*.csv'): shutil.copy(f, dst / f.name)
 Then:
 
 ```bash
-python -m f1model.evaluate --data-dir data/raw --holdout  # backtest, reliability, holdout; two figures; ~30 s
+python -m f1model.evaluate --data-dir data/raw --holdout  # backtest, reliability, holdout, bootstrap; two figures; ~40 s
 python -m f1model.explain --data-dir data/raw             # SHAP values and three figures; ~15 s
 ```
 
