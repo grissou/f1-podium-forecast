@@ -2,12 +2,12 @@
 name = "f1model"
 version = "0.1.0"
 description = "Pre-race F1 podium probability model with a walk-forward backtest"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.1",
-    "numpy>=1.26",
-    "scikit-learn>=1.4",
-    "xgboost>=2.0",
+    "pandas==3.1.0",
+    "numpy==2.5.4",
+    "scikit-learn==1.9.1",
+    "xgboost==3.4.1",
     "shap>=0.45",
     "matplotlib>=3.8",
 ]
