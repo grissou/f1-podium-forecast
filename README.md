@@ -30,6 +30,20 @@ of sample, so the model ships with fixed defaults.
 | Best model | XGBoost, depth 3, fixed defaults, early-stopped on the last training season |
 | Code | 8 modules, under 700 lines, 20 unit tests, CI |
 
+If you have no background in modelling, these are the only terms you need:
+
+| Term | Meaning here |
+|---|---|
+| **Model** | A procedure that turns facts about a driver before a race into a probability of a podium |
+| **Feature** | One of those facts, as a number: grid slot, podium rate over the last 10 races, and so on |
+| **Training** | Showing the model past races, with their results, so it can learn how features relate to podiums |
+| **Testing** | Scoring the model on seasons it never saw in training; the only numbers that count |
+| **Backtest** | Pretending to be at each past season in turn, training only on what was known then, and checking the forecasts |
+| **Benchmark** | The simple forecast the model has to beat: here, the podium rate for each grid slot |
+| **Overfitting** | Memorising the training races instead of learning general patterns; looks great in training, fails on new seasons |
+| **Calibration** | Whether a "30% chance" really comes true about 30% of the time |
+| **SHAP** | A way of splitting one forecast into the contribution of each feature, so a prediction can be explained |
+
 ---
 
 ## Contents
@@ -348,18 +362,29 @@ linear model on the same inputs shows how much of XGBoost's gain comes from
 the features and how much from non-linearity. Answer: most of it is the
 features (+4.2% of the +6.2%).
 
-**XGBoost** (`train.py`). What it is, in plain terms: a decision tree asks a
-chain of yes/no questions about the features ("grid slot below 4? team points
-above 10?") and gives a score at the end of each chain. One tree is a crude
-model. Gradient boosting builds hundreds of small trees one after another,
-each one fitted to the mistakes the previous trees are still making, and adds
-them up. The result is a flexible model that captures interactions (a good
-driver in a bad car, a strong car starting from the back) that a linear model
-cannot, while staying explainable because every prediction is a sum of tree
-scores, which is what SHAP takes apart. XGBoost is a fast, well-tested
-implementation that also handles missing values natively. The settings below
-are deliberately conservative for a few thousand rows and a probability
-target:
+**XGBoost** (`train.py`). If you have never met a machine-learning model,
+here is the idea. Imagine a very simple rule for picking podium finishers:
+"if the car starts in the top three, say podium; otherwise say no". That rule
+is a *decision tree* with one question. A bigger tree asks a few questions in
+sequence ("top three on the grid? if not, has the team scored more than 10
+points a race lately? if so, is the driver's recent podium rate above 30%?")
+and ends each path with a number: how likely a podium is for drivers who
+answered that way.
+
+One tree on its own is crude. *Boosting* fixes that by building trees in
+turn. The first tree makes its guesses. The second tree is built only to
+correct where the first one was most wrong. The third corrects what is still
+wrong after the first two, and so on for a few hundred rounds, each tree
+allowed only a small say. Add all their numbers up and you get the forecast.
+Because every forecast is just a sum of small, readable steps, it can be
+taken apart afterwards to see which facts pushed it up or down; that is what
+the SHAP charts in section 3 do. XGBoost is simply a fast, widely used
+program that does this boosting, and it copes with missing information (a
+driver's first race) without needing it filled in.
+
+The settings below are deliberately cautious for a dataset of a few thousand
+rows, where a model that is allowed too much freedom will memorise the past
+instead of learning from it:
 
 | Setting | Value | Why |
 |---|---|---|
