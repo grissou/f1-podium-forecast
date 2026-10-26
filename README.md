@@ -119,7 +119,11 @@ lucky year. Brier skill against the grid baseline:
 
 XGBoost with fixed defaults is the only model that beats the grid in all seven
 seasons. 2019 was hard for every model: Mercedes started at the front and
-finished there, so the grid was almost perfectly informative.
+finished there, so the grid was almost perfectly informative. The 2019 margin
+is thin enough to depend on the computer: the same code and library versions
+on an x86 Linux machine give -1.3% for 2019 and +5.7% on average, because
+XGBoost's random row sampling plays out slightly differently. The numbers here
+come from an Apple-silicon Mac with the versions pinned in `pyproject.toml`.
 
 ### Holdout, 2023 to 2024
 
@@ -540,7 +544,7 @@ Questions this project is ready for:
 
 ## 14. Reproduce it
 
-Requirements: Python 3.11 or newer.
+Requirements: Python 3.12 or newer. Library versions are pinned so the numbers reproduce.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
