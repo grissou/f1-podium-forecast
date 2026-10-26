@@ -7,17 +7,8 @@ import pandas as pd
 # The dataset writes missing values as the literal string "\N".
 NA_VALUES = ["\\N"]
 
-TABLES = (
-    "races",
-    "results",
-    "qualifying",
-    "drivers",
-    "constructors",
-    "circuits",
-    "status",
-    "driver_standings",
-    "constructor_standings",
-)
+# The standings tables are deliberately absent: they are recorded after each race.
+TABLES = ("races", "results", "qualifying", "drivers")
 
 
 def load_table(data_dir: str | Path, name: str) -> pd.DataFrame:

@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 
 from f1model.baseline import GridBaseline
-from f1model.evaluate import METRICS, backtest, compare, expected_calibration_error, top3_hit_rate
+from f1model.evaluate import (METRICS, compare, expected_calibration_error, holdout,
+                              reliability_table, top3_hit_rate)
+from f1model.features import build_features
 from f1model.train import logistic_regression
 
 
@@ -19,7 +21,6 @@ def test_ece_is_zero_when_calibrated():
 
 
 def test_backtest_and_brier_skill(synthetic_base):
-    from f1model.features import build_features
     df = build_features(synthetic_base)
     results = compare({"grid": GridBaseline, "logistic": logistic_regression}, df, test_seasons=[2011, 2012])
     assert list(results.index.names) == ["model", "season"]
@@ -29,8 +30,6 @@ def test_backtest_and_brier_skill(synthetic_base):
 
 
 def test_holdout_fits_once_before_the_holdout_seasons(synthetic_base):
-    from f1model.evaluate import holdout
-    from f1model.features import build_features
     df = build_features(synthetic_base)
     results = holdout({"grid": GridBaseline}, df, seasons=(2012,))
     assert list(results.index) == [("grid", "2012"), ("grid", "all")]
@@ -38,7 +37,6 @@ def test_holdout_fits_once_before_the_holdout_seasons(synthetic_base):
 
 
 def test_reliability_table_bins_predictions():
-    from f1model.evaluate import reliability_table
     table = reliability_table(y=[0, 0, 1, 1], p=[0.1, 0.2, 0.8, 0.9], edges=[0, 0.5, 1.0])
     assert list(table["n"]) == [2, 2]
     assert list(table["observed"]) == [0.0, 1.0]

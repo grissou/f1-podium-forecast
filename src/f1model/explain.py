@@ -123,7 +123,7 @@ def main() -> None:
     parser.add_argument("--out-dir", default="reports")
     args = parser.parse_args()
 
-    tables = load_tables(args.data_dir, names=("races", "results", "qualifying", "drivers"))
+    tables = load_tables(args.data_dir)
     df = build_features(build_base_table(tables))
     values, base = shap_values(df)
     out = Path(args.out_dir)

@@ -27,7 +27,6 @@ These beat accuracy and features whenever they conflict.
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pytest                                       # unit tests, no data needed
-python -m f1model.eda --data-dir data/raw    # phase 1 summary (needs data)
 python -m f1model.evaluate --data-dir data/raw  # walk-forward backtest + reliability table
 python -m f1model.evaluate --data-dir data/raw --holdout  # + 2023-2024 holdout (already run once)
 python -m f1model.explain --data-dir data/raw   # SHAP values + README figures
@@ -77,8 +76,7 @@ and copy the `*.csv` files over. Missing values in the CSVs are the literal `\N`
 `features.py` (point-in-time features), `baseline.py` (grid benchmark),
 `splits.py` (walk-forward folds), `train.py` (models with a shared
 `fit(df)` / `predict_proba(df)` interface), `evaluate.py` (metrics, backtest
-script), `explain.py` (out-of-sample SHAP and all figures), `eda.py` (phase 1
-script). All six phases are done; figures live in `reports/figures/` and are
+script), `explain.py` (out-of-sample SHAP and all figures). All six phases are done; figures live in `reports/figures/` and are
 committed.
 Tests use the small synthetic fixture in `tests/conftest.py`; keep CI
 independent of the real data.
