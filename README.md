@@ -60,7 +60,7 @@ If you have no background in modelling, these are the only terms you need:
 10. [Models](#10-models)
 11. [Calibration](#11-calibration)
 12. [Honest reading of the result](#12-honest-reading-of-the-result)
-13. [Questions this project is ready for](#13-questions-this-project-is-ready-for)
+13. [Common questions](#13-common-questions)
 14. [Reproduce it](#14-reproduce-it)
 15. [Repository layout](#15-repository-layout)
 
@@ -524,7 +524,7 @@ description of what the model does than "beats the grid".
   model would make money. The claims are about forecast skill against the
   grid.
 
-## 13. Questions this project is ready for
+## 13. Common questions
 
 - *Why not cross-validation?* Because the features are lagged aggregates. A
   shuffled fold trains on the future. Walk-forward by season is the only
