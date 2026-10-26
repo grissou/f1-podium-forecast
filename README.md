@@ -60,9 +60,8 @@ If you have no background in modelling, these are the only terms you need:
 10. [Models](#10-models)
 11. [Calibration](#11-calibration)
 12. [Honest reading of the result](#12-honest-reading-of-the-result)
-13. [Common questions](#13-common-questions)
-14. [Reproduce it](#14-reproduce-it)
-15. [Repository layout](#15-repository-layout)
+13. [Reproduce it](#13-reproduce-it)
+14. [Repository layout](#14-repository-layout)
 
 ---
 
@@ -221,7 +220,7 @@ Source: the Kaggle dataset
 [rohanrao/formula-1-world-championship-1950-2020](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020),
 14 relational CSV files covering every championship race since 1950 (despite
 the name it runs to the end of 2024). The CSVs are not committed: the whole
-`data/` folder is git-ignored. Section 14
+`data/` folder is git-ignored. Section 13
 shows how to download them. Missing values are written as the literal `\N`.
 
 | Table | One row per | Used for |
@@ -524,33 +523,7 @@ description of what the model does than "beats the grid".
   model would make money. The claims are about forecast skill against the
   grid.
 
-## 13. Common questions
-
-- *Why not cross-validation?* Because the features are lagged aggregates. A
-  shuffled fold trains on the future. Walk-forward by season is the only
-  honest split, and the leakage test proves the features obey it.
-- *What is the benchmark and why?* The grid, because it is the market price:
-  it already impounds qualifying pace. A model only matters if it adds
-  information beyond it, and Brier skill measures exactly that.
-- *Why did you reject tuning?* It won on the inner validation season by a
-  hair and lost out of sample. With 400 rows per season the search fits
-  noise. Fixed, conservative defaults were the more defensible choice.
-- *The holdout was flat on Brier skill. Why not fix it?* Because the holdout
-  is spent. Changing the model after seeing it would make it a validation
-  set and the reported number would no longer mean anything.
-- *Did the edge persist out of sample?* In seven of the nine out-of-sample
-  seasons clearly, and in 2019 only by a margin within run-to-run noise. The bootstrap interval is clear of zero over the seven
-  walk-forward seasons and over 2023, and includes zero over 2024 and over
-  the pooled holdout. A small edge that one quiet season can erase, reported
-  with its error bars.
-- *What does the model know that the grid does not?* How far off the pole
-  lap a car qualified, and how strong the team has been lately. SHAP shows
-  those two carry as much weight as the grid slot itself.
-- *Is a 19% forecast useful if the driver then finishes third?* Yes, if 19%
-  forecasts come true about 19% of the time, which the reliability diagram
-  shows they do. Calibration is what makes a probability usable for sizing.
-
-## 14. Reproduce it
+## 13. Reproduce it
 
 Requirements: Python 3.12 or newer. Library versions are pinned so the numbers reproduce.
 
@@ -582,7 +555,7 @@ python -m f1model.explain --data-dir data/raw             # SHAP values and thre
 Every number and figure in this README comes from those commands. Tables land
 in `reports/` as CSV and figures in `reports/figures/`.
 
-## 15. Repository layout
+## 14. Repository layout
 
 ```
 src/f1model/
