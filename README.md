@@ -220,7 +220,8 @@ log loss and Brier capture and hit rate does not.
 Source: the Kaggle dataset
 [rohanrao/formula-1-world-championship-1950-2020](https://www.kaggle.com/datasets/rohanrao/formula-1-world-championship-1950-2020),
 14 relational CSV files covering every championship race since 1950 (despite
-the name it runs to the end of 2024). The CSVs are not committed; section 14
+the name it runs to the end of 2024). The CSVs are not committed: the whole
+`data/` folder is git-ignored. Section 14
 shows how to download them. Missing values are written as the literal `\N`.
 
 | Table | One row per | Used for |
