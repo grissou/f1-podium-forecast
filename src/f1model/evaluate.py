@@ -48,7 +48,7 @@ def reliability_table(y, p, edges) -> pd.DataFrame:
 
 
 def expected_calibration_error(y, p, bins: int = 10) -> float:
-    """Does 30% mean 30%? Mean gap between predicted and observed rate, weighted by bin size."""
+    """Average gap between predicted and observed podium rate per bin, weighted by bin size."""
     table = reliability_table(y, p, np.linspace(0, 1, bins + 1))
     return float(((table["predicted"] - table["observed"]).abs() * table["n"] / table["n"].sum()).sum())
 
@@ -60,10 +60,10 @@ def top3_hit_rate(df: pd.DataFrame, p: np.ndarray) -> float:
 
 
 def log_loss_gain(df: pd.DataFrame, p_model, p_grid, n_boot: int = 5000, seed: int = 0) -> dict:
-    """Is the edge real? Per-race log-loss gain of the model over the grid, with a bootstrap CI.
+    """Per-race log-loss gain of the model over the grid, with a 95% bootstrap CI.
 
-    Races are the unit of resampling because drivers in one race are not
-    independent (exactly three of them finish on the podium).
+    Resample races, not rows: drivers in the same race aren't independent
+    (exactly three of them get a podium).
     """
     y = df["podium"].to_numpy()
     row_gain = _row_log_loss(y, np.asarray(p_grid)) - _row_log_loss(y, np.asarray(p_model))
@@ -130,10 +130,8 @@ def main() -> None:
 
     df = build_features(build_base_table(load_tables(args.data_dir)))
     out = Path(args.out_dir)
-    out.mkdir(parents=True, exist_ok=True)
-
     figures = out / "figures"
-    figures.mkdir(exist_ok=True)
+    figures.mkdir(parents=True, exist_ok=True)
 
     results = compare(MODELS, df)
     results.to_csv(out / "backtest.csv")
