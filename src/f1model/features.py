@@ -1,12 +1,7 @@
-"""Point-in-time features built from the base table.
+"""Features for each driver and race, using only what was known before the race.
 
-A feature for race t may use only races before t (every rolling window is
-shifted by one race first) plus pre-race facts for t (grid, qualifying).
-Nothing here reads a column in dataset.OUTCOMES without that shift.
-
-Finance analogues: form = momentum, team form = sector momentum, season
-points = relative strength, DNF rate = default risk, circuit history =
-seasonality.
+Pre-race facts (grid, qualifying) are used as they are. Anything built from
+results is shifted back one race first, so race t never sees its own result.
 """
 
 import pandas as pd

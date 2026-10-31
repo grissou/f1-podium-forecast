@@ -28,14 +28,13 @@ class FeatureModel:
 
 
 def logistic_regression() -> FeatureModel:
-    """Benchmark 2: linear model on the same features. Imputer and scaler fit per training window."""
+    """Linear benchmark on the same features. Imputer and scaler are fitted on the training window only."""
     return FeatureModel(make_pipeline(
         SimpleImputer(strategy="median"), StandardScaler(), LogisticRegression(max_iter=1000)
     ))
 
 
-# Shallow trees, slow learning, row/column subsampling: the usual recipe for a few
-# thousand rows where the aim is a calibrated probability rather than a leaderboard.
+# Cautious settings for a few thousand rows: shallow trees, small steps, subsampling.
 XGB_DEFAULTS = dict(
     max_depth=3, learning_rate=0.05, min_child_weight=5,
     subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0,
@@ -49,12 +48,11 @@ EARLY_STOPPING_ROUNDS = 50
 
 
 class XGBoostModel(FeatureModel):
-    """Gradient boosting tuned on the last training season, then refit on the whole window.
+    """XGBoost that holds out the last training season to choose its settings, then refits on all of it.
 
-    The last season of the training window is the inner validation set: it picks
-    the number of boosting rounds (early stopping) and, with `n_trials > 0`,
-    the best of `n_trials` random draws from XGB_SEARCH_SPACE by log loss.
-    The outer test season is never seen. Candidate 0 is always XGB_DEFAULTS.
+    The held-out season picks the number of trees (early stopping) and, if
+    n_trials > 0, the best of XGB_DEFAULTS plus n_trials random draws from
+    XGB_SEARCH_SPACE, by log loss. The test season is never seen.
     """
 
     def __init__(self, n_trials: int = 0, seed: int = 0, features=FEATURES):

@@ -1,28 +1,24 @@
-"""SHAP attribution of the out-of-sample forecasts, and the figures in the README.
+"""SHAP values for the out-of-sample forecasts, and the README figures.
 
 Usage: python -m f1model.explain --data-dir data/raw
 
-SHAP values are computed on each walk-forward test season from the model fitted
-on the seasons before it, so the explanations are as out-of-sample as the
-forecasts. Values are in log-odds: +0.7 roughly doubles the odds of a podium.
+Each test season is explained by the model trained on the seasons before it.
+SHAP values are in log-odds: +0.7 roughly doubles the odds of a podium.
 """
 
 import argparse
 from pathlib import Path
 
-import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import shap
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-
-from f1model.dataset import build_base_table  # noqa: E402
-from f1model.features import FEATURES, build_features  # noqa: E402
-from f1model.load import load_tables  # noqa: E402
-from f1model.splits import TEST_SEASONS, walk_forward  # noqa: E402
-from f1model.train import xgboost  # noqa: E402
+from f1model.dataset import build_base_table
+from f1model.features import FEATURES, build_features
+from f1model.load import load_tables
+from f1model.splits import TEST_SEASONS, walk_forward
+from f1model.train import xgboost
 
 COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"]
 INK, MUTED, SURFACE = "#0b0b0b", "#898781", "#fcfcfb"
@@ -138,7 +134,7 @@ def main() -> None:
     plot_importance(values, figures / "shap_importance.png")
     plot_by_season(values, df.loc[values.index, "year"], figures / "shap_by_season.png")
 
-    # The podium from furthest back on the grid is the most instructive single forecast.
+    # Example forecast: the podium from furthest back on the grid.
     scored = df.loc[values.index]
     row = scored[scored["podium"] == 1]["grid"].idxmax()
     plot_waterfall(df, values, base, row, figures / "shap_waterfall.png")
